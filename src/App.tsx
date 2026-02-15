@@ -9,7 +9,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/camera" element={<CameraPage />} />
-        <Route path="/language" element={<Language />} />
+        <Route path="/" element={<Language />} />
         <Route path="/tutorial" element={<Tutorial />} />
         <Route path="/zoom" element={<Zoom />} />
       </Routes>
