@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routes import help
+from app.routes import help, verify
 
 # Configure logging
 logging.basicConfig(
@@ -24,11 +24,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS Configuration
-origins = settings.cors_origins.split(",")
+# CORS Configuration - allow all origins for hackathon
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,6 +35,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(help.router)
+app.include_router(verify.router)
 
 
 @app.get("/health")
@@ -61,4 +61,5 @@ async def root():
         "message": "TreeHacks26 API - Hackathon Help System",
         "docs": "/docs",
         "health": "/health",
+        "dashboard": "/verify/dashboard",
     }

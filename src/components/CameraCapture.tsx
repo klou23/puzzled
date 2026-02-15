@@ -7,6 +7,9 @@ type Props = {
 };
 
 const API_URL = import.meta.env.VITE_API_URL;
+const RUNPOD_URL = import.meta.env.VITE_RUNPOD_URL;
+const RUNPOD_API_KEY = import.meta.env.VITE_RUNPOD_API_KEY;
+const USE_RUNPOD = import.meta.env.VITE_USE_RUNPOD === "true";
 
 export default function CameraCapture({ stepId, onResult }: Props) {
   const webcamRef = useRef<Webcam>(null);
@@ -38,25 +41,55 @@ export default function CameraCapture({ stepId, onResult }: Props) {
     setLoading(true);
 
     try {
-      // Convert base64 dataURL -> Blob -> File
-      const res = await fetch(imageSrc);
-      const blob = await res.blob();
-      const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+      let data;
 
-      const form = new FormData();
-      form.append("image", file);
-      form.append("stepId", String(stepId));
+      if (USE_RUNPOD && RUNPOD_URL) {
+        // RunPod serverless format - send base64 directly
+        const base64Data = imageSrc.split(",")[1]; // Remove "data:image/jpeg;base64," prefix
 
-      const response = await fetch(`${API_URL}/verify-step`, {
-        method: "POST",
-        body: form,
-      });
+        const response = await fetch(RUNPOD_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${RUNPOD_API_KEY}`,
+          },
+          body: JSON.stringify({
+            input: {
+              image_base64: base64Data,
+              step_id: stepId,
+            },
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`RunPod API error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        // RunPod wraps response in "output" field
+        data = result.output || result;
+      } else {
+        // Standard REST API format
+        const res = await fetch(imageSrc);
+        const blob = await res.blob();
+        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+
+        const form = new FormData();
+        form.append("image", file);
+        form.append("stepId", String(stepId));
+
+        const response = await fetch(`${API_URL}/verify/verify-step`, {
+          method: "POST",
+          body: form,
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        data = await response.json();
       }
 
-      const data = await response.json();
       onResult(data);
 
       if ("speechSynthesis" in window && data.feedback) {

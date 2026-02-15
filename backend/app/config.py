@@ -10,13 +10,19 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
 
-    # Zoom OAuth Credentials
-    zoom_account_id: str
-    zoom_client_id: str
-    zoom_client_secret: str
+    # Zoom OAuth Credentials (optional for verify-only mode)
+    zoom_account_id: str = ""
+    zoom_client_id: str = ""
+    zoom_client_secret: str = ""
+
+    # Anthropic API Key
+    anthropic_api_key: str = ""
+
+    # Reference images directory
+    reference_dir: str = "./reference_images"
 
     # CORS Configuration
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     # Application Settings
     environment: str = "development"
