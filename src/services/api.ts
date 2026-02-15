@@ -11,12 +11,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
  * Custom API Error class for structured error handling
  */
 export class ApiError extends Error {
+  statusCode: number;
+  detail?: string;
+
   constructor(
     message: string,
-    public statusCode: number,
-    public detail?: string
+    statusCode: number,
+    detail?: string
   ) {
     super(message);
+    this.statusCode = statusCode;
+    this.detail = detail;
     this.name = 'ApiError';
   }
 }
